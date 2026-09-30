@@ -1,0 +1,22 @@
+{
+  "name": "pi-multiplayer",
+  "version": "0.1.0",
+  "description": "pi extension: invite people into your live pi session as viewers or contributors",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["pi-package"],
+  "pi": {
+    "extensions": ["./src/multiplayer.ts"]
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "e2e": "node test/e2e.ts"
+  },
+  "dependencies": {
+    "@pi-multiplayer/core": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.84.3"
+  }
+}

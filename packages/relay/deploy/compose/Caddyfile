@@ -1,0 +1,4 @@
+# Caddy terminates TLS and proxies WebSockets to the relay; certificates are issued automatically.
+{$RELAY_DOMAIN} {
+	reverse_proxy relay:8787
+}

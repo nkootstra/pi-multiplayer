@@ -1,0 +1,27 @@
+{
+  "name": "@pi-multiplayer/relay",
+  "version": "0.1.0",
+  "description": "Self-hostable relay for pi-multiplayer: lets hosts and guests meet without opening ports",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "bin": {
+    "pi-multiplayer-relay": "./src/main.ts"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "token": "node src/main.ts token",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@pi-multiplayer/core": "*",
+    "@types/ws": "^8.5.0"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

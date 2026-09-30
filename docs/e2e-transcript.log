@@ -1,0 +1,273 @@
+pi-multiplayer e2e — model opencode-go/deepseek-v4.1-flash — workspace /tmp/pi-multiplayer-e2e-NkcQNU
+
+# Suite: direct
+
+## [direct] host starts sharing and creates role-scoped invites
+> alice: /mp start direct 0
+  [alice notify/info] multiplayer: sharing directly on 127.0.0.1:59501. Create invites with /mp invite viewer|contributor
+> alice: /mp invite contributor
+  [alice notify/info] multiplayer contributor invite: pi --join pimp://127.0.0.1:59501/Zhxp9v8-v0l2z8QsVG8YbV-u
+> alice: /mp invite viewer
+  [alice notify/info] multiplayer viewer invite: pi --join pimp://127.0.0.1:59501/UU7B0W9kLdxep2Zmxa_nyyVD
+PASS [direct] host starts sharing and creates role-scoped invites
+
+## [direct] an invalid invite is rejected
+> bob: /mp join pimp://127.0.0.1:59501/not-a-real-token bob
+  [alice notify/info] multiplayer: Rejected a connection with an invalid invite
+  [bob notify/error] multiplayer: Invalid or revoked invite
+PASS [direct] an invalid invite is rejected
+
+## [direct] guests join with the role from their invite
+> carol: /mp join pimp://127.0.0.1:59501/Zhxp9v8-v0l2z8QsVG8YbV-u carol
+  [alice notify/info] multiplayer: carol joined as contributor
+  [carol notify/info] multiplayer: joined as carol (contributor)
+> bob: /mp join pimp://127.0.0.1:59501/UU7B0W9kLdxep2Zmxa_nyyVD bob
+  [alice notify/info] multiplayer: bob joined as viewer
+  [bob notify/info] multiplayer: joined as bob (viewer)
+> alice: /mp who
+  [alice notify/info] multiplayer participants:
+  alice (host)
+  carol (contributor)
+  bob (viewer)
+PASS [direct] guests join with the role from their invite
+
+## [direct] pi --join <invite> --as <name> joins on startup
+  [alice notify/info] multiplayer: dave joined as viewer
+  [dave notify/info] multiplayer: joined as dave (viewer)
+PASS [direct] pi --join <invite> --as <name> joins on startup
+
+## [direct] a viewer cannot prompt the host agent
+> bob: Create a file named hacked.txt containing 'pwned'.
+  [bob notify/warning] multiplayer: Your role (viewer) cannot prompt. You can watch, but not prompt.
+PASS [direct] a viewer cannot prompt the host agent
+
+## [direct] a tampered viewer client is still refused by the host
+  [alice notify/info] multiplayer: mallory joined as viewer
+  [alice notify/info] multiplayer: Blocked prompt from viewer mallory
+PASS [direct] a tampered viewer client is still refused by the host
+
+## [direct] a contributor prompts the host agent and everyone sees the result
+> carol: Use the write tool to create a file named haiku.txt in the current directory containing a three-line haiku about pair programming. Then reply with exactly: DONE
+  [alice notify/info] multiplayer: mallory left
+  [alice notify/info] multiplayer: prompt from carol
+  haiku.txt on host:
+    Two minds, one keyboard,
+    bugs retreat beneath shared thought,
+    code grows clear and bright.
+    
+PASS [direct] a contributor prompts the host agent and everyone sees the result
+
+## [direct] contributors can chat; viewers cannot
+> bob: /mp chat hello from the cheap seats
+  [bob notify/error] multiplayer: Your role (viewer) cannot chat
+> carol: /mp chat nice haiku
+PASS [direct] contributors can chat; viewers cannot
+
+## [direct] the host promotes a viewer, who can then prompt
+> alice: /mp role bob contributor
+  [bob notify/warning] multiplayer: the host made you a contributor
+  [alice notify/info] multiplayer: bob is now a contributor
+> bob: Read haiku.txt and reply with its first line only.
+  [alice notify/info] multiplayer: prompt from bob
+PASS [direct] the host promotes a viewer, who can then prompt
+
+## [direct] the host demotes them again and prompting is blocked
+> alice: /mp role bob viewer
+  [bob notify/warning] multiplayer: the host made you a viewer
+  [alice notify/info] multiplayer: bob is now a viewer
+> bob: Delete haiku.txt
+  [bob notify/warning] multiplayer: Your role (viewer) cannot prompt. You can watch, but not prompt.
+PASS [direct] the host demotes them again and prompting is blocked
+
+## [direct] with approval on, the host can decline a contributor's prompt
+> alice: /mp approve on
+  [alice notify/info] multiplayer: guest prompts need your approval
+> carol: Delete haiku.txt
+  [alice confirm] Prompt from carol: Delete haiku.txt -> false
+  [carol notify/error] multiplayer: The host declined your prompt
+> alice: /mp approve off
+  [alice notify/info] multiplayer: guest prompts run without approval
+PASS [direct] with approval on, the host can decline a contributor's prompt
+
+## [direct] revoked invites stop working
+> alice: /mp revoke
+  [alice notify/info] multiplayer: revoked 2 invites
+  [alice notify/info] multiplayer: Rejected a connection with an invalid invite
+  [erin notify/error] multiplayer: Invalid or revoked invite
+PASS [direct] revoked invites stop working
+
+## [direct] the host kicks a participant
+> alice: /mp kick carol
+  [alice notify/info] multiplayer: removed carol
+  [carol notify/warning] multiplayer: disconnected (Removed by host)
+> alice: /mp who
+  [alice notify/info] multiplayer participants:
+  alice (host)
+  bob (viewer)
+  dave (viewer)
+PASS [direct] the host kicks a participant
+
+## [direct] stopping the host disconnects the remaining guests
+> alice: /mp stop
+  [bob notify/warning] multiplayer: disconnected (Host ended the session)
+  [alice notify/info] multiplayer: stopped hosting
+  [dave notify/warning] multiplayer: disconnected (Host ended the session)
+PASS [direct] stopping the host disconnects the remaining guests
+
+# Suite: relay
+  [relay] pi-multiplayer relay listening on :59522 with 1 host token(s): e2e
+  [relay] 
+## [relay] a host with the wrong relay token cannot open a session
+> eve: /mp start
+  [relay] 2026-09-30T12:31:50.062Z auth failed from 127.0.0.1
+  [relay]   [eve notify/error] multiplayer: Relay refused: Invalid relay token
+PASS [relay] a host with the wrong relay token cannot open a session
+
+## [relay] host starts sharing and creates role-scoped invites
+> alice: /mp start
+  [relay] 2026-09-30T12:31:50.115Z session i153UXvzgDZKG2lhow27ug opened by e2e (127.0.0.1)
+  [relay]   [alice notify/info] multiplayer: sharing via relay ws://127.0.0.1:59522. Create invites with /mp invite viewer|contributor
+> alice: /mp invite contributor
+  [alice notify/info] multiplayer contributor invite: pi --join pimp+ws://127.0.0.1:59522/s/i153UXvzgDZKG2lhow27ug/MEPpZWbFT5gpn6DvJ6ZkYVZZ
+> alice: /mp invite viewer
+  [alice notify/info] multiplayer viewer invite: pi --join pimp+ws://127.0.0.1:59522/s/i153UXvzgDZKG2lhow27ug/9HOFNw7Lc6oU7HKhhBVliMoN
+PASS [relay] host starts sharing and creates role-scoped invites
+
+## [relay] an invalid invite is rejected
+> bob: /mp join pimp+ws://127.0.0.1:59522/s/i153UXvzgDZKG2lhow27ug/not-a-real-token bob
+  [alice notify/info] multiplayer: Rejected a connection with an invalid invite
+  [bob notify/error] multiplayer: Invalid or revoked invite
+PASS [relay] an invalid invite is rejected
+
+## [relay] guests join with the role from their invite
+> carol: /mp join pimp+ws://127.0.0.1:59522/s/i153UXvzgDZKG2lhow27ug/MEPpZWbFT5gpn6DvJ6ZkYVZZ carol
+  [alice notify/info] multiplayer: carol joined as contributor
+  [carol notify/info] multiplayer: joined as carol (contributor)
+> bob: /mp join pimp+ws://127.0.0.1:59522/s/i153UXvzgDZKG2lhow27ug/9HOFNw7Lc6oU7HKhhBVliMoN bob
+  [alice notify/info] multiplayer: bob joined as viewer
+  [bob notify/info] multiplayer: joined as bob (viewer)
+> alice: /mp who
+  [alice notify/info] multiplayer participants:
+  alice (host)
+  carol (contributor)
+  bob (viewer)
+PASS [relay] guests join with the role from their invite
+
+## [relay] pi --join <invite> --as <name> joins on startup
+  [alice notify/info] multiplayer: dave joined as viewer
+  [dave notify/info] multiplayer: joined as dave (viewer)
+PASS [relay] pi --join <invite> --as <name> joins on startup
+
+## [relay] a viewer cannot prompt the host agent
+> bob: Create a file named hacked.txt containing 'pwned'.
+  [bob notify/warning] multiplayer: Your role (viewer) cannot prompt. You can watch, but not prompt.
+PASS [relay] a viewer cannot prompt the host agent
+
+## [relay] a tampered viewer client is still refused by the host
+  [alice notify/info] multiplayer: mallory joined as viewer
+  [alice notify/info] multiplayer: Blocked prompt from viewer mallory
+PASS [relay] a tampered viewer client is still refused by the host
+
+## [relay] a contributor prompts the host agent and everyone sees the result
+> carol: Use the write tool to create a file named haiku.txt in the current directory containing a three-line haiku about pair programming. Then reply with exactly: DONE
+  [alice notify/info] multiplayer: mallory left
+  [alice notify/info] multiplayer: prompt from carol
+  haiku.txt on host:
+    Two minds share one screen,
+    Thoughts interlace line by line,
+    Bugs flee from our gaze.
+    
+PASS [relay] a contributor prompts the host agent and everyone sees the result
+
+## [relay] contributors can chat; viewers cannot
+> bob: /mp chat hello from the cheap seats
+  [bob notify/error] multiplayer: Your role (viewer) cannot chat
+> carol: /mp chat nice haiku
+PASS [relay] contributors can chat; viewers cannot
+
+## [relay] the host promotes a viewer, who can then prompt
+> alice: /mp role bob contributor
+  [alice notify/info] multiplayer: bob is now a contributor
+  [bob notify/warning] multiplayer: the host made you a contributor
+> bob: Read haiku.txt and reply with its first line only.
+  [alice notify/info] multiplayer: prompt from bob
+PASS [relay] the host promotes a viewer, who can then prompt
+
+## [relay] the host demotes them again and prompting is blocked
+> alice: /mp role bob viewer
+  [alice notify/info] multiplayer: bob is now a viewer
+  [bob notify/warning] multiplayer: the host made you a viewer
+> bob: Delete haiku.txt
+  [bob notify/warning] multiplayer: Your role (viewer) cannot prompt. You can watch, but not prompt.
+PASS [relay] the host demotes them again and prompting is blocked
+
+## [relay] with approval on, the host can decline a contributor's prompt
+> alice: /mp approve on
+  [alice notify/info] multiplayer: guest prompts need your approval
+> carol: Delete haiku.txt
+  [alice confirm] Prompt from carol: Delete haiku.txt -> false
+  [carol notify/error] multiplayer: The host declined your prompt
+> alice: /mp approve off
+  [alice notify/info] multiplayer: guest prompts run without approval
+PASS [relay] with approval on, the host can decline a contributor's prompt
+
+## [relay] revoked invites stop working
+> alice: /mp revoke
+  [alice notify/info] multiplayer: revoked 2 invites
+  [alice notify/info] multiplayer: Rejected a connection with an invalid invite
+  [erin notify/error] multiplayer: Invalid or revoked invite
+PASS [relay] revoked invites stop working
+
+## [relay] the host kicks a participant
+> alice: /mp kick carol
+  [alice notify/info] multiplayer: removed carol
+  [carol notify/warning] multiplayer: disconnected (Removed by host)
+> alice: /mp who
+  [alice notify/info] multiplayer participants:
+  alice (host)
+  bob (viewer)
+  dave (viewer)
+PASS [relay] the host kicks a participant
+
+## [relay] stopping the host disconnects the remaining guests
+> alice: /mp stop
+  [alice notify/info] multiplayer: bob left
+  [alice notify/info] multiplayer: dave left
+  [alice notify/info] multiplayer: stopped hosting
+  [relay] 2026-09-30T12:32:04.723Z session i153UXvzgDZKG2lhow27ug closed (Host disconnected)
+  [relay]   [bob notify/warning] multiplayer: disconnected (Host ended the session)
+  [dave notify/warning] multiplayer: disconnected (Host ended the session)
+PASS [relay] stopping the host disconnects the remaining guests
+
+# Summary
+PASS  [direct] host starts sharing and creates role-scoped invites
+PASS  [direct] an invalid invite is rejected
+PASS  [direct] guests join with the role from their invite
+PASS  [direct] pi --join <invite> --as <name> joins on startup
+PASS  [direct] a viewer cannot prompt the host agent
+PASS  [direct] a tampered viewer client is still refused by the host
+PASS  [direct] a contributor prompts the host agent and everyone sees the result
+PASS  [direct] contributors can chat; viewers cannot
+PASS  [direct] the host promotes a viewer, who can then prompt
+PASS  [direct] the host demotes them again and prompting is blocked
+PASS  [direct] with approval on, the host can decline a contributor's prompt
+PASS  [direct] revoked invites stop working
+PASS  [direct] the host kicks a participant
+PASS  [direct] stopping the host disconnects the remaining guests
+PASS  [relay] a host with the wrong relay token cannot open a session
+PASS  [relay] host starts sharing and creates role-scoped invites
+PASS  [relay] an invalid invite is rejected
+PASS  [relay] guests join with the role from their invite
+PASS  [relay] pi --join <invite> --as <name> joins on startup
+PASS  [relay] a viewer cannot prompt the host agent
+PASS  [relay] a tampered viewer client is still refused by the host
+PASS  [relay] a contributor prompts the host agent and everyone sees the result
+PASS  [relay] contributors can chat; viewers cannot
+PASS  [relay] the host promotes a viewer, who can then prompt
+PASS  [relay] the host demotes them again and prompting is blocked
+PASS  [relay] with approval on, the host can decline a contributor's prompt
+PASS  [relay] revoked invites stop working
+PASS  [relay] the host kicks a participant
+PASS  [relay] stopping the host disconnects the remaining guests
+
+transcript: /tmp/pi-multiplayer-e2e-NkcQNU/e2e-transcript.log

@@ -1,0 +1,16 @@
+{
+  "name": "pi-multiplayer-monorepo",
+  "private": true,
+  "packageManager": "npm@12.1.0",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "e2e": "turbo run e2e"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0"
+  }
+}

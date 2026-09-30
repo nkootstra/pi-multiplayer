@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "inputs": ["src/**", "test/**", "tsconfig.json", "package.json"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["src/**", "test/**", "package.json"]
+    },
+    "e2e": {
+      "dependsOn": ["test"],
+      "cache": false,
+      "passThroughEnv": ["PI_*", "MULTIPLAYER_*", "HOME", "PATH"]
+    }
+  }
+}

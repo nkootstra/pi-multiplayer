@@ -1,0 +1,37 @@
+# Relay + Caddy with automatic HTTPS (Let's Encrypt). Works on any host with Docker.
+#
+#   cp .env.example .env    # set RELAY_DOMAIN and RELAY_TOKENS
+#   docker compose up -d
+#
+# Point a DNS record for RELAY_DOMAIN at this machine and open ports 80 and 443.
+# Clients then use wss://<RELAY_DOMAIN>.
+services:
+  relay:
+    build: ../..
+    restart: unless-stopped
+    environment:
+      RELAY_TOKENS: ${RELAY_TOKENS:?set RELAY_TOKENS in .env}
+      RELAY_TRUST_PROXY: "1"
+      RELAY_MAX_SESSIONS_PER_TOKEN: ${RELAY_MAX_SESSIONS_PER_TOKEN:-3}
+      RELAY_MAX_GUESTS: ${RELAY_MAX_GUESTS:-25}
+    expose:
+      - "8787"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - relay
+    environment:
+      RELAY_DOMAIN: ${RELAY_DOMAIN:?set RELAY_DOMAIN in .env}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

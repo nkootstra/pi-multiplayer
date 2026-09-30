@@ -1,0 +1,14 @@
+{
+  "name": "@pi-multiplayer/core",
+  "version": "0.1.0",
+  "description": "Transport, invites and role-based permissions for sharing a pi session",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

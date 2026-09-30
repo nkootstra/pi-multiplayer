@@ -1,0 +1,26 @@
+# Run the relay without Docker (Node >= 22.18). Put TLS in front with Caddy or nginx.
+#
+#   sudo cp -r packages/relay /opt/pi-multiplayer-relay && cd /opt/pi-multiplayer-relay
+#   sudo npm install --omit=dev ws
+#   sudo install -m 600 /dev/null /etc/pi-multiplayer-relay.env   # then add RELAY_TOKENS=... to it
+#   sudo cp deploy/systemd/pi-multiplayer-relay.service /etc/systemd/system/
+#   sudo systemctl enable --now pi-multiplayer-relay
+[Unit]
+Description=pi-multiplayer relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/pi-multiplayer-relay
+EnvironmentFile=/etc/pi-multiplayer-relay.env
+Environment=PORT=8787 HOST=127.0.0.1 RELAY_TRUST_PROXY=1
+ExecStart=/usr/bin/env node src/main.ts
+Restart=on-failure
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

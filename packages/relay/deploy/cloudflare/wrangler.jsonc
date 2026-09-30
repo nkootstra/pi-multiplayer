@@ -1,0 +1,29 @@
+// pi-multiplayer relay on Cloudflare Containers.
+//   npm install
+//   npx wrangler secret put RELAY_TOKENS     # "niels=<token>,sam=<token>"
+//   npm run deploy                           # → wss://pi-multiplayer-relay.<account>.workers.dev
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pi-multiplayer-relay",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "vars": {
+    "RELAY_MAX_SESSIONS_PER_TOKEN": "3",
+    "RELAY_MAX_GUESTS": "25"
+  },
+  "containers": [
+    {
+      "class_name": "RelayContainer",
+      "image": "../../Dockerfile",
+      "image_build_context": "../..",
+      // Sessions live in the relay's memory, so there must be exactly one instance.
+      "max_instances": 1,
+      "instance_type": "lite"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY", "class_name": "RelayContainer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayContainer"] }]
+}

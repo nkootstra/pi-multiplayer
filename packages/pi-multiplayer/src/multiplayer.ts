@@ -1,6 +1,5 @@
 import { networkInterfaces, userInfo } from "node:os";
 import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent";
-import { Text } from "@earendil-works/pi-tui";
 import {
 	formatInvite,
 	hostViaRelay,
@@ -16,6 +15,7 @@ import {
 } from "@pi-multiplayer/core";
 import { maskToken, normalizeRelayUrl, resolveRelay, saveName, savedName, saveRelay } from "./config.ts";
 import { attribute, type SharedMessage, toSessionEvent } from "./events.ts";
+import { renderSessionEvent } from "./render.ts";
 import { SecretInput } from "./secret-input.ts";
 
 const ENTRY_TYPE = "multiplayer";
@@ -119,31 +119,7 @@ export default function multiplayer(pi: ExtensionAPI) {
 
 	// ---------------------------------------------------------------- rendering (guest side)
 
-	pi.registerEntryRenderer<SessionEvent>(ENTRY_TYPE, (entry, { expanded }, theme) => {
-		const event = entry.data;
-		if (!event) return undefined;
-		switch (event.kind) {
-			case "user":
-				return new Text(`${theme.bold(theme.fg("accent", `${event.author} ›`))} ${event.text}`, 1, 1);
-			case "assistant": {
-				const calls = event.toolCalls.map((c) => theme.fg("dim", `→ ${c.name} ${c.args}`));
-				return new Text([event.text, ...calls].filter(Boolean).join("\n"), 1, 0);
-			}
-			case "tool": {
-				const lines = event.output.split("\n");
-				const shown = expanded ? lines : lines.slice(0, 3);
-				const more = lines.length > shown.length ? theme.fg("dim", `\n  … ${lines.length - shown.length} more lines`) : "";
-				const head = theme.fg(event.isError ? "error" : "success", `${event.isError ? "✗" : "✓"} ${event.name}`);
-				return new Text(`${head}\n${theme.fg("muted", shown.join("\n"))}${more}`, 1, 0);
-			}
-			case "chat":
-				return new Text(theme.fg("muted", `💬 ${theme.bold(event.author)}: ${event.text}`), 1, 0);
-			case "system":
-				return new Text(theme.fg("dim", `• ${event.text}`), 1, 0);
-			default:
-				return undefined;
-		}
-	});
+	pi.registerEntryRenderer<SessionEvent>(ENTRY_TYPE, renderSessionEvent);
 
 	const renderLive = () => {
 		if (!ctx?.hasUI) return;
